@@ -1,0 +1,41 @@
+Шаг 1: Обновление системы
+
+Bash
+
+sudo dnf update -y
+▌ Шаг 2: Установка репозитория PostgreSQL
+
+Bash
+
+sudo dnf install https://download.postgresql.org/pub/repos/yum/reporpms/EL-8-x86_64/pgdg-redhat-repo-latest.noarch.rpm -y
+▌ Шаг 3: Установка сервера PostgreSQL
+
+Выберите версию PostgreSQL, которую хотите установить. Например, для версии 14:
+
+Bash
+
+sudo dnf install postgresql14-server -y
+▌ Шаг 4: Инициализация базы данных
+
+Bash
+
+sudo /usr/pgsql-14/bin/postgresql-14-setup initdb
+▌ Шаг 5: Запуск службы PostgreSQL
+
+Bash
+
+sudo systemctl start postgresql-14
+sudo systemctl enable postgresql-14
+▌ Шаг 6: Проверка статуса службы
+
+Bash
+
+sudo systemctl status postgresql-14
+▌ Шаг 7: Вход в консоль PostgreSQL
+
+Используйте учетную запись postgres для входа в консоль:
+
+Bash
+
+sudo su - postgres
+psql
