@@ -39,3 +39,31 @@ Bash
 
 sudo su - postgres
 psql
+
+
+# IP адрес, который прослушивает PostgreSQL (можно оставить *, чтобы слушал все интерфейсы)
+listen_addresses = '*'
+
+# Порт, на котором работает PostgreSQL (обычно 5432)
+port = 5432
+
+# Максимальное количество одновременных соединений
+max_connections = 100
+
+# Типичные директории журналов и временных файлов
+log_directory = 'pg_log'          # Лог-файлы будут храниться в каталоге pg_log внутри каталога data
+log_filename = 'postgresql-%Y-%m-%d_%H%M%S.log'   # Формат имени журнала
+
+# Настройки производительности
+shared_buffers = 1GB              # Размер буферов памяти для обработки запросов
+effective_cache_size = 4GB        # Предполагаемый объем доступной кэш-памяти ОС
+work_mem = 64MB                   # Память для сортировок и хешей
+maintenance_work_mem = 512MB      # Объем оперативной памяти для операций обслуживания (VACUUM, CREATE INDEX)
+wal_level = replica               # Уровень записи WAL (для восстановления и репликаций)
+checkpoint_timeout = 1h           # Интервал между контрольными точками
+autovacuum = on                   # Автоматическая очистка таблиц включена
+
+
+# allow external connections 
+# file vim /var/lib/pgsql/14/data/pg_hba.conf
+host    all     all     0.0.0.0/0     md5 ### or change it to 192.168.0.0/24
