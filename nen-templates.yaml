@@ -43,17 +43,66 @@ apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
   name: nen-ingress
+  namespace: n8n
   annotations:
-    nginx.ingress.kubernetes.io/rewrite-target: /
+    cert-manager.io/cluster-issuer: letsencrypt-production
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/proxy-buffer-size: "16k"
 spec:
   ingressClassName: nginx
+  tls:
+    - hosts:
+        - <your-domain>
+      secretName: n8n-tls-secret
   rules:
-    - http:
+    - host: <your-domain>
+      http:
         paths:
-          - path: /api
+          - path: "/"
             pathType: Prefix
             backend:
               service:
                 name: nen-app
                 port:
                   number: 80
+---
+apiVersion: cert-manager.io/v1
+kind: Issuer
+metadata:
+  name: letsencrypt-production
+  namespace: n8n
+spec:
+  acme:
+    server: https://acme-v02.api.letsencrypt.org/directory
+    email: <your-email>
+    privateKeySecretRef:
+      name: letsencrypt-production-key
+    solvers:
+      - http01:
+          ingress:
+            class: nginx
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: n8n-tls-secret
+  namespace: n8n
+type: kubernetes.io/tls
+data:
+  tls.crt: ""
+  tls.key: ""
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: n8n-cert
+  namespace: n8n
+spec:
+  secretName: n8n-tls-secret
+  issuerRef:
+    kind: Issuer
+    name: letsencrypt-production
+  commonName: <your-external-domain>
+  dnsNames:
+    - <your-external-domain>
+---
