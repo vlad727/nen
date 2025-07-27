@@ -1,0 +1,59 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nen-app
+  labels:
+    app: nen-app
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: nen-app
+  template:
+    metadata:
+      name: nen-app
+      labels:
+        app: nen-app
+    spec:
+      containers:
+        - name: nen-app
+          image: n8nio/n8n:nightly
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 5678
+              protocol: TCP
+      restartPolicy: Always
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: nen-app
+  namespace: n8n
+spec:
+  selector:
+    app: nen-app
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 5678
+  type: ClusterIP
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: nen-ingress
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: /
+spec:
+  ingressClassName: nginx
+  rules:
+    - http:
+        paths:
+          - path: /api
+            pathType: Prefix
+            backend:
+              service:
+                name: nen-app
+                port:
+                  number: 80
