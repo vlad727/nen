@@ -1,3 +1,5 @@
+# Installation for postgresql 
+
 Шаг 1: Обновление системы
 
 Bash
@@ -64,6 +66,24 @@ checkpoint_timeout = 1h           # Интервал между контроль
 autovacuum = on                   # Автоматическая очистка таблиц включена
 
 
-# allow external connections 
+# Allow external connections 
 # file vim /var/lib/pgsql/14/data/pg_hba.conf
 host    all     all     0.0.0.0/0     md5 ### or change it to 192.168.0.0/24
+
+# Create database
+-- Подключаемся к консоли psql
+$ sudo su - postgres
+$ psql
+
+-- Создаем нового пользователя с заданным именем и паролем
+CREATE USER myapp_user WITH PASSWORD 'mysecretpassword';
+
+-- Создаем новую базу данных и назначаем владельцем её новый пользователь
+CREATE DATABASE myapp_db OWNER myapp_user;
+
+-- Предоставляем права на подключение к новой БД новому пользователю
+GRANT ALL PRIVILEGES ON DATABASE myapp_db TO myapp_user;
+
+-- Выход из консоли psql
+\\q
+
