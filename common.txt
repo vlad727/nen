@@ -1,3 +1,78 @@
-# Addons for k8s cluster
+# Addons for kubernetes
 nginx-ingress controller
 cert-manager
+
+
+# Environments for n8n
+encryption-key for n8n
+kubectl create secret generic n8n-secret --from-literal=encryption-key="$(openssl rand -base64 32)" -n n8n
+
+## Environments
+env:
+  - name: N8N_ENCRYPTION_KEY
+    valueFrom:
+      secretKeyRef:
+        name: n8n-secret
+        key: encryption-key
+  - name: N8N_BASE_URL
+    value: "http://my-n8n.example.com/"
+  - name: N8N_HTTP_PORT
+    value: "5678"
+
+# Postgresql for n8n
+## Environments for postgresql
+          - name: N8N_DB_TYPE
+            value: "postgres"
+          - name: N8N_DB_HOST
+            value: "postgresql-service"
+          - name: N8N_DB_PORT
+            value: "5432"
+          - name: N8N_DB_NAME
+            value: "n8n"
+          - name: N8N_DB_USER
+            value: "n8n"
+          - name: N8N_DB_PASSWORD
+            valueFrom:
+              secretKeyRef:
+                name: postgres-secret
+                key: password
+### Create secret for postgresql
+kubectl create secret generic postgres-secret --from-literal=password='Your_super_secret_passowrd' -n n8n
+
+# About Ingress, tls, certificates
+1. Ingres — настроен верно и включает аннотации для SSL-перенаправления и использование сертификата:
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+...
+spec:
+  tls:
+  - hosts:
+    - <your-domain>
+    secretName: n8n-tls-secret
+Это значит, что трафик на хост n8n-mnitek.ru защищается секретом n8n-tls-secret.
+
+2. Issuer — созданный вами Issuer тоже корректен и позволяет выдавать сертификаты через Let's Encrypt:
+apiVersion: cert-manager.io/v1
+kind: Issuer
+...
+spec:
+  acme:
+    ...
+    server: https://acme-v02.api.letsencrypt.org/directory
+3. Certificate — объект Certificate необходим для запуска процесса выдачи сертификата:
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: n8n-cert
+  namespace: n8n
+spec:
+  secretName: n8n-tls-secret
+  issuerRef:
+    kind: Issuer
+    name: letsencrypt-production
+  commonName: <your-domain>
+  dnsNames:
+    - <your-domain>
+Этот объект запрашивает сертификат для указанного DNS имени (n8n-mnitek.ru), сохраняет его в секрете n8n-tls-secret.
+
+4. Secret — вам нужен секрет типа kubernetes.io/tls, который хранит сам сертификат и приватный ключ.Вы уже создали его, и он заполнится автоматически после успешной выдачи сертификата.
